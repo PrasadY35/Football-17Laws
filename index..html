@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="title" content="Interactive Football Rules Guide | Master the Laws of the Game">
+    <meta name="description" content="Unlock the Laws of Football! Explore IFAB's 17 official rules with interactive diagrams, animated Offside explanations, and clear breakdowns of fouls. Your ultimate guide to understanding soccer's regulations for fans and players.">
+    <meta name="keywords" content="football rules, soccer rules, laws of the game, IFAB, offside rule, fouls and misconduct, football field dimensions, interactive football guide, soccer regulations, referee guide, learn football rules">
+    <meta name="author" content="AI Assistant">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="Interactive Football Rules Guide | Master the Laws of the Game">
+    <meta property="og:description" content="Unlock the Laws of Football! Explore IFAB's 17 official rules with interactive diagrams, animated Offside explanations, and clear breakdowns of fouls. Your ultimate guide to understanding soccer's regulations for fans and players.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="YOUR_WEBSITE_URL_HERE"> <!-- Replace with your actual URL -->
+    <meta property="og:image" content="YOUR_IMAGE_URL_HERE"> <!-- Optional: URL to a relevant image, e.g., a screenshot of the app -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Interactive Football Rules Guide | Master the Laws of the Game">
+    <meta name="twitter:description" content="Unlock the Laws of Football! Explore IFAB's 17 official rules with interactive diagrams, animated Offside explanations, and clear breakdowns of fouls. Your ultimate guide to understanding soccer's regulations for fans and players.">
+    <meta name="twitter:image" content="YOUR_IMAGE_URL_HERE"> <!-- Optional: URL to a relevant image -->
+    <title>Interactive Guide to the Laws of Football</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals & Pitch Green -->
+    <!-- Application Structure Plan: A thematic, non-linear single-page application. The primary navigation is a grid of all 17 laws, allowing users to jump directly to any rule. The content is grouped into four logical themes: 1) The Essentials (Field, Ball, Players, Equipment), 2) Match Flow (Start/Restart, Duration, etc.), 3) Offenses & Key Rules (Fouls, Offside), and 4) The Officials. This structure is chosen over a linear report format because users interested in football rules typically want to find specific information quickly (e.g., "What's the offside rule?"). The thematic grouping makes discovery intuitive, and the interactive elements within each section (like diagrams and tabs) break down complex information into digestible pieces, enhancing usability and learning. -->
+    <!-- Visualization & Content Choices: 
+        - Law 1 (Field): Report Info -> Field Dimensions. Goal -> Inform. Viz -> Interactive HTML/CSS diagram with clickable zones. Interaction -> On-click tooltips show dimensions. Justification -> More engaging and spatially intuitive than a list of numbers. Method -> HTML/CSS with JS for popups.
+        - Law 11 (Offside): Report Info -> Definition of offside position and offense. Goal -> Explain a complex spatial rule. Viz -> 2D Canvas animation. Interaction -> Buttons trigger animations showing "position" vs. "offense". Justification -> Animation is crucial to demonstrate the rule at the "moment the ball is played," which a static image cannot do effectively. Method -> Native Canvas API.
+        - Law 12 (Fouls): Report Info -> Categories of fouls and misconduct. Goal -> Organize large amounts of categorical data. Viz -> Tabbed interface for "Direct Kick," "Indirect Kick," "Cautions," "Send-Offs." Interaction -> Clicking tabs reveals specific offenses. Justification -> Prevents a long, intimidating wall of text and allows for focused exploration. Method -> JS for tab switching.
+        - Rule Categories (Overview): Report Info -> The 17 Laws. Goal -> Provide a high-level summary of the rulebook's structure. Viz -> Doughnut Chart. Interaction -> Hover to see category name and law count. Justification -> Gives a visual, data-driven entry point to the application's structure. Library -> Chart.js.
+        - Restarts (Laws 8, 15, 16, 17): Report Info -> Procedural steps. Goal -> Explain procedures. Viz -> Simple diagrams (HTML/CSS) with accompanying text. Interaction -> Accordion-style reveal. Justification -> A clean, simple way to present procedural information without over-complicating the interface. Method -> JS for toggles. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFDFB;
+            color: #333333;
+        }
+        .law-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .law-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .active-law-button {
+            background-color: #22c55e !important;
+            color: white !important;
+        }
+        .content-section {
+            display: none;
+            border-left: 3px solid #22c55e;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .visible-section {
+            display: block;
+        }
+        .tab-button {
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .active-tab {
+            background-color: #166534;
+            color: white;
+            border-color: #166534;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .pitch {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 7 / 5;
+            background-color: #34D399;
+            border: 2px solid white;
+            margin: auto;
+            color: white;
+        }
+        .pitch-line {
+            position: absolute;
+            background-color: white;
+            opacity: 0.7;
+        }
+        .center-line {
+            width: 2px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .center-circle {
+            position: absolute;
+            width: 20%;
+            aspect-ratio: 1/1;
+            border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 50%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .penalty-area {
+            position: absolute;
+            width: 40%;
+            height: 80%;
+            border: 2px solid rgba(255,255,255,0.7);
+            top: 10%;
+        }
+        .left { left: 0; }
+        .right { right: 0; }
+        .goal-area {
+            position: absolute;
+            width: 20%;
+            height: 40%;
+            border: 2px solid rgba(255,255,255,0.7);
+            top: 30%;
+        }
+        .interactive-zone {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .interactive-zone:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .tooltip {
+            display: none;
+            position: absolute;
+            background-color: #1a202c;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            z-index: 10;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold">The Laws of the Game</h1>
+            <p class="mt-2 text-lg text-gray-300">An Interactive Guide to the Official Rules of Association Football</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <section id="law-navigation" class="mb-12">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Explore the 17 Laws</h2>
+                <p class="text-gray-600 mt-2">Click on any law to view its detailed rules and interpretations.</p>
+            </div>
+            <div id="law-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            </div>
+        </section>
+        
+        <div id="content-container" class="mt-8"></div>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-400">Content based on the official Laws of the Game by IFAB. This is an educational, non-official resource.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const laws = [
+                { id: 1, title: 'The Field of Play', category: 'Essentials' },
+                { id: 2, title: 'The Ball', category: 'Essentials' },
+                { id: 3, title: 'The Players', category: 'Essentials' },
+                { id: 4, title: 'The Players\' Equipment', category: 'Essentials' },
+                { id: 5, title: 'The Referee', category: 'Officials' },
+                { id: 6, title: 'The Other Match Officials', category: 'Officials' },
+                { id: 7, title: 'The Duration of the Match', category: 'Match Flow' },
+                { id: 8, title: 'The Start and Restart of Play', category: 'Match Flow' },
+                { id: 9, title: 'The Ball in and out of Play', category: 'Match Flow' },
+                { id: 10, title: 'Determining the Outcome of a Match', category: 'Match Flow' },
+                { id: 11, title: 'Offside', category: 'Offenses & Key Rules' },
+                { id: 12, title: 'Fouls and Misconduct', category: 'Offenses & Key Rules' },
+                { id: 13, title: 'Free Kicks', category: 'Offenses & Key Rules' },
+                { id: 14, title: 'The Penalty Kick', category: 'Offenses & Key Rules' },
+                { id: 15, title: 'The Throw-in', category: 'Restarts' },
+                { id: 16, 'title': 'The Goal Kick', category: 'Restarts' },
+                { id: 17, 'title': 'The Corner Kick', category: 'Restarts' }
+            ];
+
+            const lawContent = {
+                1: {
+                    title: "Law 1: The Field of Play",
+                    intro: "This foundational law defines the playing surface and its markings. The dimensions and features specified ensure a standardized and safe environment for every match. Explore the interactive pitch below to see the key areas and their official measurements.",
+                    content: `
+                        <div class="bg-green-100 p-4 rounded-lg">
+                            <div class="pitch" id="pitch-diagram">
+                                <div class="pitch-line center-line"></div>
+                                <div class="center-circle"></div>
+                                <div class="penalty-area left interactive-zone" data-tooltip="Penalty Area: 16.5m (18 yds) from goal line"></div>
+                                <div class="goal-area left interactive-zone" data-tooltip="Goal Area: 5.5m (6 yds) from goal line"></div>
+                                <div class="penalty-area right interactive-zone" data-tooltip="Penalty Area: 16.5m (18 yds) from goal line"></div>
+                                <div class="goal-area right interactive-zone" data-tooltip="Goal Area: 5.5m (6 yds) from goal line"></div>
+                                <div id="tooltip-box" class="tooltip"></div>
+                            </div>
+                        </div>
+                        <div class="mt-4 grid md:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Field Length:</strong> 90m to 120m</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Field Width:</strong> 45m to 90m</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Penalty Mark:</strong> 11m (12 yds) from the goal line</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Center Circle Radius:</strong> 9.15m (10 yds)</div>
+                        </div>
+                        <p class="mt-4 text-gray-700">The law also standardizes goal dimensions, the corner area, and provides regulations for Goal Line Technology (GLT) and Video Assistant Referee (VAR) facilities.</p>`
+                },
+                2: {
+                    title: "Law 2: The Ball",
+                    intro: "This law specifies the quality and measurements of the official match ball to ensure fairness and consistency. It also outlines procedures for replacing a defective ball during play.",
+                    content: `
+                        <ul class="list-disc list-inside space-y-2 bg-white p-6 rounded-lg shadow-md">
+                            <li><strong>Qualities:</strong> Must be spherical, made of suitable material, and of a specific size and weight.</li>
+                            <li><strong>Measurements:</strong> Circumference between 68-70 cm, weight between 410-450 g at the start of the match.</li>
+                            <li><strong>Replacement:</strong> If the ball becomes defective, play is stopped and restarted with a dropped ball. The defective ball cannot be changed during play without the referee's authority.</li>
+                        </ul>`
+                },
+                3: {
+                    title: "Law 3: The Players",
+                    intro: "This law governs the number of players, the substitution process, and the roles and responsibilities of players, including the team captain. Recent changes emphasize player safety.",
+                    content: `
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Number of Players:</strong> A match is played by two teams, each with a maximum of 11 players (one of whom is the goalkeeper). A match may not start or continue if either team has fewer than seven players.</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Substitutions:</strong> The maximum number of substitutes, up to a maximum of five, that may be used in any match played in an official competition will be determined by FIFA, the confederation or the national football association.</div>
+                             <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-lg shadow"><strong>2024/25 Update:</strong> Competitions now have the option to formally implement "additional permanent concussion substitutions" to prioritize player safety. It is also now mandatory for each team captain to wear an identifying armband.</div>
+                        </div>`
+                },
+                4: {
+                    title: "Law 4: The Players' Equipment",
+                    intro: "Focusing on safety, this law details the compulsory equipment for players and regulations for what can be worn. Players are now explicitly responsible for their own protective gear.",
+                    content: `
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold mb-2">Compulsory Equipment:</h4>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>A shirt with sleeves</li>
+                                    <li>Shorts</li>
+                                    <li>Socks</li>
+                                    <li>Shinguards (must be of a suitable material to provide reasonable protection)</li>
+                                    <li>Footwear</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold mb-2">Key Regulations:</h4>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>Goalkeepers may wear tracksuit bottoms.</li>
+                                    <li>Shinguards must be covered by socks.</li>
+                                    <li>Slogans, statements or images on equipment are regulated.</li>
+                                     <li class="font-semibold text-green-700">2024/25 Update: Players are now directly responsible for the size and suitability of their own shinguards.</li>
+                                </ul>
+                            </div>
+                        </div>`
+                },
+                5: {
+                    title: "Law 5: The Referee",
+                    intro: "The referee is the ultimate authority on the field, with full power to enforce the Laws of the Game. Their decisions on facts connected with play are final.",
+                    content: `
+                        <div class="space-y-4">
+                            <h4 class="text-xl font-bold">Powers and Duties</h4>
+                            <ul class="list-disc list-inside bg-white p-4 rounded-lg shadow space-y-2">
+                                <li>Enforces the Laws of the Game.</li>
+                                <li>Controls the match in cooperation with other officials.</li>
+                                <li>Acts as timekeeper and keeps a record of the match.</li>
+                                <li>Applies the 'advantage' rule to allow play to continue if it benefits the non-offending team.</li>
+                                <li>Takes disciplinary action against players (cautions/send-offs) and team officials.</li>
+                                <li>Stops, suspends, or abandons the match for any infringements of the Laws or outside interference.</li>
+                                <li>Makes the final decision based on information from other officials, including the VAR.</li>
+                            </ul>
+                        </div>`
+                },
+                6: {
+                    title: "Law 6: The Other Match Officials",
+                    intro: "A team of officials assists the referee in controlling the match. This includes assistant referees, the fourth official, and video assistant referees (VAR), all of whom operate under the referee's direction.",
+                    content: `
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Assistant Referees (ARs):</strong> Signal when the ball is out of play, for offsides, and for substitutions. They also monitor the goal line during penalty kicks.</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Fourth Official:</strong> Manages substitutions, checks equipment, and indicates added time.</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Video Assistant Referee (VAR):</strong> A match official who reviews decisions using video footage for 'clear and obvious errors' or 'serious missed incidents' relating to goals, penalties, direct red cards, and mistaken identity. The VAR can only recommend a review; the referee makes the final decision.</div>
+                        </div>`
+                },
+                7: {
+                    title: "Law 7: The Duration of the Match",
+                    intro: "This law defines the standard length of a match and the procedures for adding time for stoppages. This ensures a consistent duration of play across all games.",
+                    content: `
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Periods of Play:</strong> The match lasts for two equal halves of 45 minutes, which may only be reduced if agreed between the referee and both teams before the start of the match.</div>
+                             <div class="bg-white p-4 rounded-lg shadow"><strong>Half-time Interval:</strong> Players are entitled to an interval at half-time, not exceeding 15 minutes.</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Allowance for Time Lost:</strong> The referee adds time in each half for stoppages caused by substitutions, assessment of injuries, time-wasting, disciplinary sanctions, VAR reviews, and other causes.</div>
+                        </div>`
+                },
+                8: {
+                    title: "Law 8: The Start and Restart of Play",
+                    intro: "This law outlines the specific procedures for a kick-off and a dropped ball, the two methods for starting and restarting play during a match.",
+                    content: `
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold mb-2">Kick-Off</h4>
+                                <p>Used to start each half and restart play after a goal. All players must be in their own half, and opponents must be 9.15m away. A goal can be scored directly from a kick-off.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold mb-2">Dropped Ball</h4>
+                                <p>Restarts play when the referee stops it for a reason not mentioned elsewhere in the Laws. The ball is dropped for one player of the team that last touched it. All other players must be at least 4m away.</p>
+                            </div>
+                        </div>`
+                },
+                9: {
+                    title: "Law 9: The Ball in and out of Play",
+                    intro: "A simple but crucial law that defines the state of the ball. The ball's status determines whether the game is active or paused.",
+                    content: `
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-green-100 border-l-4 border-green-500 p-4 rounded-lg">
+                                <h4 class="font-bold mb-2 text-green-800">Ball in Play</h4>
+                                <p>The ball is in play at all other times, including when it rebounds off a match official, goalpost, crossbar or corner flagpost and remains in the field of play.</p>
+                            </div>
+                            <div class="bg-red-100 border-l-4 border-red-500 p-4 rounded-lg">
+                                <h4 class="font-bold mb-2 text-red-800">Ball out of Play</h4>
+                                <p>The ball is out of play when it has wholly passed over the goal line or touchline on the ground or in the air, or when play has been stopped by the referee.</p>
+                            </div>
+                        </div>`
+                },
+                10: {
+                    title: "Law 10: Determining the Outcome of a Match",
+                    intro: "This law defines how a match is won and outlines the procedures, like penalty shoot-outs, used to determine a winner when required by competition rules.",
+                    content: `
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Scoring a Goal:</strong> A goal is scored when the whole of the ball passes over the goal line, between the goalposts and under the crossbar, provided that no offence has been committed by the team scoring the goal.</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Winning Team:</strong> The team scoring the greater number of goals is the winner. If both teams score an equal number of goals, or if no goals are scored, the match is drawn.</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Deciding a Winner:</strong> When competition rules require a winning team after a drawn match, procedures like extra time (two further equal periods of 15 minutes) and kicks from the penalty mark (penalty shoot-out) are the permitted methods.</div>
+                        </div>`
+                },
+                11: {
+                    title: "Law 11: Offside",
+                    intro: "One of football's most debated rules. Being in an offside position is not an offense in itself. An offense only occurs when a player in that position becomes actively involved in play. Use the interactive diagram below to understand the key concepts.",
+                    content: `
+                        <div class="bg-green-100 p-4 rounded-lg">
+                            <canvas id="offside-canvas" class="bg-green-500 rounded-md w-full" width="500" height="300"></canvas>
+                            <div class="mt-4 flex justify-center gap-4">
+                                <button id="reset-offside" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">Reset</button>
+                                <button id="show-position" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Show Offside Position</button>
+                                <button id="show-offense" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">Show Offside Offense</button>
+                            </div>
+                        </div>
+                        <div class="mt-4 space-y-3">
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Offside Position:</strong> A player is in an offside position if any part of their head, body or feet is in the opponents' half (excluding the halfway line) AND is nearer to the opponents' goal line than both the ball and the second-last opponent.</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>Committing an Offense:</strong> A player in an offside position is only penalised if, at the moment the ball is played by a team-mate, they become involved in active play by: interfering with play, interfering with an opponent, or gaining an advantage by being in that position.</div>
+                            <div class="bg-white p-4 rounded-lg shadow"><strong>No Offense When:</strong> There is no offside offense if a player receives the ball directly from a goal kick, a throw-in, or a corner kick.</div>
+                        </div>
+                    `
+                },
+                12: {
+                    title: "Law 12: Fouls and Misconduct",
+                    intro: "This extensive law defines the various offenses that can be committed by players and team officials, ranging from careless fouls to serious misconduct, and outlines the corresponding disciplinary sanctions.",
+                    content: `
+                        <div class="w-full">
+                            <div class="mb-4 border-b border-gray-200">
+                                <nav id="foul-tabs" class="flex flex-wrap -mb-px" aria-label="Tabs">
+                                    <button class="tab-button w-1/2 md:w-auto text-center border-b-2 font-medium text-sm p-4 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-tab="direct-kick">Direct Free Kick</button>
+                                    <button class="tab-button w-1/2 md:w-auto text-center border-b-2 font-medium text-sm p-4 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-tab="indirect-kick">Indirect Free Kick</button>
+                                    <button class="tab-button w-1/2 md:w-auto text-center border-b-2 font-medium text-sm p-4 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-tab="yellow-card">Yellow Card (Caution)</button>
+                                    <button class="tab-button w-1/2 md:w-auto text-center border-b-2 font-medium text-sm p-4 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-tab="red-card">Red Card (Sending-Off)</button>
+                                </nav>
+                            </div>
+                            <div id="tab-content-container">
+                                <div id="direct-kick" class="tab-content hidden p-4 bg-white rounded-lg shadow-inner">
+                                    <h4 class="font-bold mb-2">A direct free kick is awarded for the following offenses if committed in a careless, reckless, or excessively forceful manner:</h4>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>Charges, jumps at, kicks or attempts to kick, pushes, strikes or attempts to strike, tackles or challenges, trips or attempts to trip an opponent.</li>
+                                        <li>Also awarded for holding, impeding with contact, biting/spitting, or a handball offense.</li>
+                                    </ul>
+                                </div>
+                                <div id="indirect-kick" class="tab-content hidden p-4 bg-white rounded-lg shadow-inner">
+                                    <h4 class="font-bold mb-2">An indirect free kick is awarded for:</h4>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>Playing in a dangerous manner.</li>
+                                        <li>Impeding the progress of an opponent without contact.</li>
+                                        <li>Dissent, using offensive, insulting or abusive language.</li>
+                                        <li>Preventing the goalkeeper from releasing the ball.</li>
+                                        <li>Goalkeeper illegally handling the ball inside their penalty area (e.g., holding for more than 6 seconds, or touching it again after release).</li>
+                                    </ul>
+                                </div>
+                                <div id="yellow-card" class="tab-content hidden p-4 bg-white rounded-lg shadow-inner">
+                                    <h4 class="font-bold mb-2">Cautionable (Yellow Card) offenses include:</h4>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>Unsporting behaviour (e.g., simulation, reckless fouls).</li>
+                                        <li>Dissent by word or action.</li>
+                                        <li>Persistent offenses.</li>
+                                        <li>Delaying the restart of play.</li>
+                                        <li>Failing to respect the required distance on restarts.</li>
+                                        <li>Entering, re-entering or leaving the field without permission.</li>
+                                    </ul>
+                                </div>
+                                <div id="red-card" class="tab-content hidden p-4 bg-white rounded-lg shadow-inner">
+                                    <h4 class="font-bold mb-2">Sending-Off (Red Card) offenses include:</h4>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>Serious foul play.</li>
+                                        <li>Violent conduct.</li>
+                                        <li>Biting or spitting at someone.</li>
+                                        <li>Denying an obvious goal-scoring opportunity (DOGSO) by a handball or foul.</li>
+                                        <li>Using offensive, insulting or abusive language and/or actions.</li>
+                                        <li>Receiving a second caution in the same match.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                13: {
+                    title: "Law 13: Free Kicks",
+                    intro: "Free kicks are awarded to the opposing team after an offense. There are two types: direct, from which a goal can be scored directly, and indirect, which must touch another player before a goal can be scored.",
+                    content: `
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold mb-2">Direct Free Kick</h4>
+                                <p>A goal can be scored directly into the opponents' goal. Awarded for contact fouls or handball.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold mb-2">Indirect Free Kick</h4>
+                                <p>A goal can only be scored if the ball touches another player before entering the goal. The referee signals this by raising an arm. Awarded for non-contact offenses like dangerous play or dissent.</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-lg">
+                            <h4 class="font-bold mb-2">Key Procedures:</h4>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>The ball must be stationary before being kicked.</li>
+                                <li>Opponents must be at least 9.15m (10 yds) away from the ball until it is in play.</li>
+                                <li>If a defending team forms a 'wall' of 3 or more players, all attacking players must be at least 1m from the wall.</li>
+                            </ul>
+                        </div>`
+                },
+                14: {
+                    title: "Law 14: The Penalty Kick",
+                    intro: "A penalty kick is awarded for a direct free kick offense committed inside a player's own penalty area. It is one of the most decisive moments in a match.",
+                    content: `
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold mb-2">Procedure:</h4>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>Ball placed on the penalty mark.</li>
+                                    <li>The kicker must be clearly identified.</li>
+                                    <li>Goalkeeper must remain on the goal line, between the posts, until the ball is kicked, with at least part of one foot touching or in line with the goal line.</li>
+                                    <li>All other players must be outside the penalty area and at least 9.15m from the mark.</li>
+                                    <li>The ball must be kicked forward.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-lg"><strong>2024/25 Update:</strong> Player encroachment is now penalized only if it has a clear impact on the outcome, similar to how goalkeeper encroachment is judged. This aims for more consistency.</div>
+                        </div>`
+                },
+                15: {
+                    title: "Law 15: The Throw-in",
+                    intro: "A throw-in is a method of restarting play when the whole of the ball passes over the touchline. A goal cannot be scored directly from a throw-in.",
+                    content: `
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h4 class="font-bold mb-2">Procedure:</h4>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Thrower must face the field of play.</li>
+                                <li>Must have part of each foot on or behind the touchline.</li>
+                                <li>Uses both hands to throw the ball from behind and over the head.</li>
+                                <li>The thrower cannot touch the ball again until it has touched another player.</li>
+                                <li>Opponents must be at least 2m (2 yds) away from the point of the throw-in.</li>
+                            </ul>
+                        </div>`
+                },
+                16: {
+                    title: "Law 16: The Goal Kick",
+                    intro: "A goal kick is a method of restarting play when the ball goes out of play over the goal line, last touched by an attacking player.",
+                    content: `
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h4 class="font-bold mb-2">Procedure:</h4>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Kicked by a defending player from anywhere inside the goal area.</li>
+                                <li>Opponents must remain outside the penalty area until the ball is in play.</li>
+                                <li>The ball is in play when it is kicked and clearly moves.</li>
+                                <li>A goal can be scored directly from a goal kick (against the opposing team only).</li>
+                            </ul>
+                        </div>`
+                },
+                17: {
+                    title: "Law 17: The Corner Kick",
+                    intro: "A corner kick is a method of restarting play when the ball goes out of play over the goal line, last touched by a defending player.",
+                    content: `
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h4 class="font-bold mb-2">Procedure:</h4>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>The ball is placed inside the corner arc nearest to where it went out.</li>
+                                <li>The ball must be stationary and kicked by an attacking player.</li>
+                                <li>Opponents must remain at least 9.15m (10 yds) from the corner arc until the ball is in play.</li>
+                                <li>A goal may be scored directly from a corner kick.</li>
+                            </ul>
+                        </div>`
+                }
+            };
+
+            const lawGrid = document.getElementById('law-grid');
+            const contentContainer = document.getElementById('content-container');
+            let lawButtons = [];
+
+            laws.forEach(law => {
+                const button = document.createElement('button');
+                button.className = 'law-card bg-white p-4 rounded-lg shadow-md text-center border border-gray-200';
+                button.dataset.lawId = law.id;
+                button.innerHTML = `
+                    <span class="block text-2xl font-bold text-green-600">${law.id}</span>
+                    <span class="block mt-1 text-sm font-medium text-gray-700">${law.title}</span>
+                `;
+                button.addEventListener('click', () => showLawContent(law.id));
+                lawGrid.appendChild(button);
+                lawButtons.push(button);
+            });
+            
+            function showLawContent(lawId) {
+                const law = lawContent[lawId];
+                if (!law) return;
+
+                lawButtons.forEach(btn => {
+                    btn.classList.toggle('active-law-button', btn.dataset.lawId == lawId);
+                    if (btn.dataset.lawId == lawId) {
+                       btn.classList.remove('bg-white');
+                    } else {
+                       btn.classList.add('bg-white');
+                    }
+                });
+
+                contentContainer.innerHTML = `
+                    <section id="law-${lawId}-content" class="content-section p-6 bg-gray-50 rounded-r-lg">
+                        <h3 class="text-3xl font-bold text-gray-800 mb-2">${law.title}</h3>
+                        <p class="text-gray-600 italic mb-6">${law.intro}</p>
+                        <div>${law.content}</div>
+                    </section>
+                `;
+                
+                const section = document.getElementById(`law-${lawId}-content`);
+                section.classList.add('visible-section');
+                
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                if (lawId === 1) setupPitchInteraction();
+                if (lawId === 11) setupOffsideCanvas();
+                if (lawId === 12) setupFoulTabs();
+            }
+
+            function setupPitchInteraction() {
+                const zones = document.querySelectorAll('.interactive-zone');
+                const tooltipBox = document.getElementById('tooltip-box');
+                zones.forEach(zone => {
+                    zone.addEventListener('mousemove', (e) => {
+                        tooltipBox.style.display = 'block';
+                        tooltipBox.textContent = zone.dataset.tooltip;
+                        tooltipBox.style.left = `${e.layerX + 15}px`;
+                        tooltipBox.style.top = `${e.layerY}px`;
+                    });
+                    zone.addEventListener('mouseleave', () => {
+                        tooltipBox.style.display = 'none';
+                    });
+                });
+            }
+            
+            function setupOffsideCanvas() {
+                const canvas = document.getElementById('offside-canvas');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const W = canvas.width;
+                const H = canvas.height;
+                const playerRadius = 8;
+                const ballRadius = 6;
+
+                let attacker = { x: W * 0.7, y: H * 0.3 };
+                let lastDefender = { x: W * 0.8, y: H * 0.7 };
+                let secondLastDefender = { x: W * 0.6, y: H * 0.5 };
+                let passingPlayer = { x: W * 0.4, y: H * 0.4 };
+                let ball = { x: passingPlayer.x, y: passingPlayer.y };
+
+                function drawPlayer(p, color) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, playerRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                }
+
+                function drawBall(b) {
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, ballRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'white';
+                    ctx.fill();
+                }
+
+                function drawField() {
+                    ctx.clearRect(0, 0, W, H);
+                    ctx.fillStyle = '#22c55e';
+                    ctx.fillRect(0, 0, W, H);
+
+                    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(W / 2, 0);
+                    ctx.lineTo(W / 2, H);
+                    ctx.stroke();
+                }
+
+                function drawScenario() {
+                    drawField();
+                    drawPlayer(passingPlayer, '#4A90E2');
+                    drawPlayer(attacker, '#F5A623');
+                    drawPlayer(lastDefender, '#D0021B');
+                    drawPlayer(secondLastDefender, '#D0021B');
+                    drawBall(ball);
+                }
+                
+                function showOffsideLine(isOffense) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeStyle = 'white';
+                    ctx.moveTo(secondLastDefender.x, 0);
+                    ctx.lineTo(secondLastDefender.x, H);
+                    ctx.stroke();
+
+                    ctx.font = '14px Inter';
+                    ctx.fillStyle = 'white';
+                    if (isOffense) {
+                       ctx.fillText("OFFSIDE OFFENSE: Actively involved", attacker.x - 60, attacker.y - 15);
+                    } else {
+                       ctx.fillText("OFFSIDE POSITION", attacker.x - 60, attacker.y - 15);
+                    }
+                    ctx.restore();
+                }
+                
+                function animatePass() {
+                    let start = null;
+                    const duration = 1000;
+                    function step(timestamp) {
+                        if (!start) start = timestamp;
+                        const progress = timestamp - start;
+                        const t = Math.min(progress / duration, 1);
+                        ball.x = passingPlayer.x + (attacker.x - passingPlayer.x) * t;
+                        ball.y = passingPlayer.y + (attacker.y - passingPlayer.y) * t;
+                        drawScenario();
+                        showOffsideLine(true);
+                        if (t < 1) {
+                            requestAnimationFrame(step);
+                        }
+                    }
+                    requestAnimationFrame(step);
+                }
+
+                document.getElementById('reset-offside').addEventListener('click', () => {
+                     ball = { x: passingPlayer.x, y: passingPlayer.y };
+                     drawScenario();
+                });
+                document.getElementById('show-position').addEventListener('click', () => {
+                    drawScenario();
+                    showOffsideLine(false);
+                });
+                document.getElementById('show-offense').addEventListener('click', animatePass);
+
+                drawScenario();
+            }
+
+            function setupFoulTabs() {
+                const tabs = document.querySelectorAll('.tab-button');
+                const contents = document.querySelectorAll('.tab-content');
+
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const targetId = tab.dataset.tab;
+                        
+                        tabs.forEach(t => t.classList.remove('active-tab', 'border-green-700', 'text-green-700'));
+                        tab.classList.add('active-tab', 'border-green-700', 'text-green-700');
+                        
+                        contents.forEach(content => {
+                            content.classList.toggle('hidden', content.id !== targetId);
+                        });
+                    });
+                });
+                
+                tabs[0].click();
+            }
+
+            showLawContent(1);
+
+        });
+    </script>
+
+</body>
+</html>
